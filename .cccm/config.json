@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "thresholds": {
+    "snapshot_interval_minutes": 30,
+    "max_snapshots": 50,
+    "context_drift_warn_tokens": 8000
+  },
+  "tracking": {
+    "auto_snapshot": true,
+    "track_decisions": true,
+    "track_file_changes": true
+  },
+  "memory": {
+    "files": [
+      "decisions.md",
+      "constraints.md",
+      "interfaces.md",
+      "glossary.md"
+    ]
+  }
+}
