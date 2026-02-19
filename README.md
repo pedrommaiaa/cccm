@@ -43,7 +43,7 @@ pip install -e ".[dev]"
 
 ```bash
 cd /path/to/your-project
-cccm doctor --fix
+cccm init
 ```
 
 That's it. This single command creates everything CCCM needs:
@@ -54,9 +54,9 @@ That's it. This single command creates everything CCCM needs:
 - `CLAUDE.md` with compaction instructions (appends to existing file if present)
 
 ```
-CCCM Doctor --fix — /path/to/your-project
+Initializing CCCM in /path/to/your-project
 
-Fixed:
+Setup:
   + Created .cccm/ directory structure (memory, snapshots, config, index)
   + Wrote .claude/settings.json with all 6 hooks
   + Wrote .claude/settings.local.json with cccm-memory MCP server
@@ -65,7 +65,7 @@ Fixed:
 All checks passed. CCCM is ready in /path/to/your-project
 ```
 
-Run `cccm doctor` (without `--fix`) anytime to check health without changing anything.
+Run `cccm doctor` anytime to check health without changing anything, or `cccm doctor --fix` to re-run the full setup.
 
 ## Usage
 
@@ -83,13 +83,13 @@ Once hooks are installed, CCCM works silently in the background. Start Claude Co
 ### CLI Commands
 
 ```bash
-cccm doctor --fix      # Set up CCCM in any project (one command)
+cccm init              # Full setup: dirs, hooks, MCP config, CLAUDE.md
 cccm doctor            # Health check (diagnose only)
+cccm doctor --fix      # Re-run full setup (same as init)
 cccm snapshot          # Force a continuity snapshot
 cccm snapshot --show   # Snapshot + print content
 cccm status            # Show tracked files, events, last snapshot
 cccm memory            # Print all memory docs
-cccm init              # Initialize .cccm/ directory only
 ```
 
 ### MCP Tools (used by Claude directly)

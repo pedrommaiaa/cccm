@@ -45,7 +45,7 @@ def project_root(tmp_path: Path) -> Path:
 
 
 class TestInit:
-    def test_init_creates_structure(self, tmp_path: Path):
+    def test_init_creates_full_setup(self, tmp_path: Path, capsys):
         from cccm.cli import cmd_init
         import argparse
 
@@ -53,9 +53,33 @@ class TestInit:
         result = cmd_init(args)
 
         assert result == 0
+
+        # .cccm/ structure
         assert (tmp_path / ".cccm").is_dir()
         assert (tmp_path / ".cccm" / "memory").is_dir()
         assert (tmp_path / ".cccm" / "config.json").is_file()
+
+        # Hooks
+        settings_path = tmp_path / ".claude" / "settings.json"
+        assert settings_path.is_file()
+        settings = json.loads(settings_path.read_text())
+        for event in ("SessionStart", "PreCompact", "PostToolUse",
+                       "SubagentStart", "UserPromptSubmit", "Stop"):
+            assert event in settings["hooks"]
+
+        # MCP config
+        local_path = tmp_path / ".claude" / "settings.local.json"
+        assert local_path.is_file()
+        local_cfg = json.loads(local_path.read_text())
+        assert "cccm-memory" in local_cfg["mcpServers"]
+
+        # CLAUDE.md
+        claude_md = tmp_path / "CLAUDE.md"
+        assert claude_md.is_file()
+        assert "Compact Instructions" in claude_md.read_text()
+
+        captured = capsys.readouterr()
+        assert "All checks passed" in captured.out
 
 
 class TestSnapshot:

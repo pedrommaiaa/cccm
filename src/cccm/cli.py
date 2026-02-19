@@ -31,27 +31,37 @@ def find_project_root() -> Path:
 # Commands
 # ---------------------------------------------------------------------------
 
+def _run_full_init(root: Path) -> int:
+    """Shared init logic: create dirs, hooks, MCP config, CLAUDE.md, verify."""
+    root = root.resolve()
+    print(f"Initializing CCCM in {root}\n")
+    fixed: list[str] = []
+
+    _fix_cccm_dirs(root, fixed)
+    _fix_hooks(root, fixed)
+    _fix_mcp(root, fixed)
+    _fix_claude_md(root, fixed)
+
+    print("Setup:")
+    for item in fixed:
+        print(f"  + {item}")
+
+    # Verify
+    ok, issues = _run_checks(root)
+    if issues:
+        print("\nRemaining issues:")
+        for item in issues:
+            print(f"  ! {item}")
+        return 1
+
+    print(f"\nAll checks passed. CCCM is ready in {root}")
+    return 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     """Initialize CCCM in the current project."""
     root = Path(args.root).resolve()
-    paths = ensure_dirs(root)
-    print(f"Initialized .cccm/ in {root}")
-
-    # Create .claude/ if missing
-    claude_dir = root / ".claude"
-    claude_dir.mkdir(exist_ok=True)
-
-    settings_path = claude_dir / "settings.json"
-    if not settings_path.exists():
-        print(f"  Note: Create {settings_path} with hook registrations.")
-        print("  Run 'cccm doctor' to check configuration.")
-    else:
-        print(f"  Hooks config: {settings_path} (exists)")
-
-    print(f"  Memory: {paths['mem']}")
-    print(f"  Snapshots: {paths['snaps']}")
-    print("  Done.")
-    return 0
+    return _run_full_init(root)
 
 
 def cmd_snapshot(args: argparse.Namespace) -> int:
@@ -387,28 +397,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     fix = getattr(args, "fix", False)
 
     if fix:
-        print(f"CCCM Doctor --fix — {root}\n")
-        fixed: list[str] = []
-
-        _fix_cccm_dirs(root, fixed)
-        _fix_hooks(root, fixed)
-        _fix_mcp(root, fixed)
-        _fix_claude_md(root, fixed)
-
-        print("Fixed:")
-        for item in fixed:
-            print(f"  + {item}")
-
-        # Verify
-        ok, issues = _run_checks(root)
-        if issues:
-            print("\nRemaining issues:")
-            for item in issues:
-                print(f"  ! {item}")
-            return 1
-
-        print(f"\nAll checks passed. CCCM is ready in {root}")
-        return 0
+        return _run_full_init(root)
 
     # Diagnose-only mode
     ok, issues = _run_checks(root)
@@ -441,8 +430,8 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command")
 
     # init
-    p_init = sub.add_parser("init", help="Initialize CCCM in a project")
-    p_init.add_argument("--root", default=".", help="Project root directory")
+    p_init = sub.add_parser("init", help="Full CCCM setup: dirs, hooks, MCP config, CLAUDE.md")
+    p_init.add_argument("--root", default=".", help="Project root directory (default: current directory)")
 
     # snapshot
     p_snap = sub.add_parser("snapshot", help="Create a manual snapshot")
